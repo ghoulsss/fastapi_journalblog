@@ -45,11 +45,11 @@ async def root(request: Request):
 async def db_moves():
     # await drop_tables()
     # await create_tables()
-    async with async_session_factory() as session:
-        await demo_m2m(session)
+    # async with async_session_factory() as session:
+    #     await demo_m2m(session)
     pass
 
 
 if __name__ == "__main__":
-    asyncio.run(db_moves())
+    # asyncio.run(db_moves())
     uvicorn.run("main:app", host="localhost", port=8000, reload=True)

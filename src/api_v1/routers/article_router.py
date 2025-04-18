@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Annotated
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload, joinedload
+
 from src.db.models import Article
 from src.db.database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,7 +37,19 @@ async def get_all_articles(
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
 ):
-    articles = await session.execute(select(Article).offset(offset).limit(limit))
+    articles = await session.execute(
+        (
+            select(Article)
+            .options(
+                selectinload(Article.tag),
+                selectinload(Article.user),
+                joinedload(Article.category),
+            )
+            .offset(offset)
+            .limit(limit)
+            .order_by(Article.id)
+        )
+    )
     return articles.scalars().all()
 
 
@@ -80,7 +94,7 @@ async def delete_article(
 ):
     article = await session.get(Article, article_id)
 
-    if article == None:
+    if article is None:
         raise HTTPException(status_code=404, detail="Пост не найден")
     await session.delete(article)
     await session.commit()
