@@ -148,35 +148,63 @@ async def get_users_with_articles(session: AsyncSession) -> list[User]:
     return list(data)
 
 
-async def get_articles_full(session: AsyncSession) -> list[Article]:
+# async def get_articles_full(session: AsyncSession) -> list[Article]:
+#     stmt = (
+#         select(Article)
+#         .options(
+#             selectinload(Article.tag),
+#             joinedload(Article.category),
+#         )
+#         .order_by(Article.id)
+#     )
+#     data = await session.scalars(stmt)
+#     return list(data)
+
+
+async def get_articles_full_with_users(session: AsyncSession) -> list[Article]:
     stmt = (
         select(Article)
         .options(
             selectinload(Article.tag),
+            selectinload(Article.user),
             joinedload(Article.category),
         )
         .order_by(Article.id)
     )
     data = await session.scalars(stmt)
     return list(data)
+    # articles = await session.execute(
+    #     (
+    #         select(Article)
+    #         .options(
+    #             selectinload(Article.tag),
+    #             selectinload(Article.user),
+    #             joinedload(Article.category),
+    #         )
+    #         .offset(offset)
+    #         .limit(limit)
+    #         .order_by(Article.id)
+    #     )
+    # )
+    # return articles.scalars().all()
 
 
-async def demo_m2m(
-    session: AsyncSession,
-):
-    # await main_relations(session)
-    users = await get_users_with_articles(session)
-    for i, user in enumerate(users):
-        print(
-            f"{i+1}. username: {user.username}, email: {user.email}, авторство: {user.is_author.value}, articles:",
-        )
-        for article in user.article:
-            print(
-                "-",
-                f"Заголовок - {article.title},",  # контент - {article.content}, {article.tag},{article.category},{article.created_at}",
-            )
-    articles = await get_articles_full(session)
-    for i, article in enumerate(articles):
-        print(
-            f"{i+1}. Пост: {article.title}, Теги: {";".join(tag.name for tag in article.tag)}, Категории: {article.category.name}"
-        )
+# async def demo_m2m(
+#     session: AsyncSession,
+# ):
+#     # await main_relations(session)
+#     users = await get_users_with_articles(session)
+#     for i, user in enumerate(users):
+#         print(
+#             f"{i+1}. username: {user.username}, email: {user.email}, авторство: {user.is_author.value}, articles:",
+#         )
+#         for article in user.article:
+#             print(
+#                 "-",
+#                 f"Заголовок - {article.title},",  # контент - {article.content}, {article.tag},{article.category},{article.created_at}",
+#             )
+#     articles = await get_articles_full(session)
+#     for i, article in enumerate(articles):
+#         print(
+#             f"{i+1}. Пост: {article.title}, Теги: {";".join(tag.name for tag in article.tag)}, Категории: {article.category.name}"
+#         )
