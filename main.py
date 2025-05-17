@@ -18,7 +18,7 @@ app = FastAPI(
     title="Journal Blog",
     contact={
         "name": "Danil",
-        "url": "https://t.me/unsurpassed_talant",
+        "url": "https://t.me/unrivaled_achilles",
         "email": "danpavkzn@mail.ru",
     },
 )
