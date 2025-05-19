@@ -18,7 +18,7 @@ app = FastAPI(
     title="Journal Blog",
     contact={
         "name": "Danil",
-        "url": "https://t.me/unsurpassed_talant",
+        "url": "https://t.me/unrivaled_achilles",
         "email": "danpavkzn@mail.ru",
     },
 )
@@ -53,4 +53,4 @@ async def db_moves():
 
 if __name__ == "__main__":
     # asyncio.run(db_moves())
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=4000, reload=True)
