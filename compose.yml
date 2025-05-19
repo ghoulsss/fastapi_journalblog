@@ -2,6 +2,8 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: psgr
+    restart:
+      always
     environment:
       - POSTGRES_DB=journalblog
       - POSTGRES_USER=postgres
@@ -37,6 +39,8 @@ services:
       - "postgres:loaclhost"
     networks:
       - dbnet
+    restart:
+      always
     ports:
       - "127.0.0.1:8000:4000"
     volumes:
