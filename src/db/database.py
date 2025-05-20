@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 
+from config import settings
 from config import BASE_DIR
 
 
@@ -14,15 +15,15 @@ class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
 
 
-DATABASE_URL = f"sqlite+aiosqlite:///{BASE_DIR}/test.db"  # для sqlite
 
+async_engine = create_async_engine(url=settings.DATABASE_URL_asyncpg, echo=True) # POSTGRESQL
+async_session_factory = async_sessionmaker(async_engine, expire_on_commit=False) # POSTGRESQL
 
-# async_engine = create_async_engine(url=settings.DATABASE_URL_asyncpg, echo=True) # POSTGRESQL
-# async_session_factory = async_sessionmaker(async_engine, expire_on_commit=False) # POSTGRESQL
-async_engine = create_async_engine(url=DATABASE_URL, echo=True)  # sqlite
-async_session_factory = async_sessionmaker(
-    async_engine, expire_on_commit=False
-)  # sqlite
+# DATABASE_URL = f"sqlite+aiosqlite:///{BASE_DIR}/test.db"  # для sqlite
+# async_engine = create_async_engine(url=DATABASE_URL, echo=True)  # sqlite
+# async_session_factory = async_sessionmaker(
+#     async_engine, expire_on_commit=False
+# )  # sqlite
 
 
 # потом удалить
