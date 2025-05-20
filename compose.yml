@@ -4,10 +4,8 @@ services:
     container_name: psgr
     restart:
       always
-    environment:
-      - POSTGRES_DB=journalblog
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - .env
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -18,8 +16,8 @@ services:
     container_name: adminer
     ports:
       - "127.0.0.1:8080:8080"
-    links:
-      - "postgres:db"
+    # links:
+    #   - "postgres:db"
     networks:
       - dbnet
     depends_on:
@@ -29,22 +27,19 @@ services:
     build: .
     image: backend-fastapi
     container_name: backend-fastapi
-    environment:
-      - DB_HOST=localhost
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASS=postgres
-      - DB_NAME=journalblog
-    links:
-      - "postgres:loaclhost"
+    env_file:
+      - .env
+    # links:
+    #   - "postgres:localhost"
     networks:
       - dbnet
     restart:
       always
+    command: "uvicorn main:app --host 0.0.0.0 --port 4000 --reload" # --workers 4
     ports:
       - "127.0.0.1:8000:4000"
     volumes:
-      - ${PWD}:/app
+      - .:/app
     depends_on:
       - postgres
 
