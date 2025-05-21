@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Annotated
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api_v1.schemas.user_schema import UserCreateSchema, UserSchema
@@ -49,17 +50,6 @@ async def get_user(user_id: int, session: AsyncSession = Depends(get_async_sessi
     return user
 
 
-# @router.patch("/{user_id}/update-password", summary="Изменение пароля пользователя")
-# async def update_user_password(
-#     user_id: int, new_pass: str, session: AsyncSession = Depends(get_async_session)
-# ):
-#     user = await session.get(User, user_id)
-#
-#     if user is None:
-#         raise HTTPException(status_code=404, detail="Пользователь не найден")
-#     user.hashed_password = hash_password(new_pass)
-#     await session.commit()
-#     return {"new_password_set": True}
 
 
 @router.delete("/{user_id}", summary="Удаление пользователя")
@@ -74,3 +64,33 @@ async def delete_user(
     await session.delete(user)
     await session.commit()
     return {"success_delete": True}
+
+# @router.patch("/{user_id}/update-password", summary="Изменение пароля пользователя")
+# async def update_user_password(
+#     user_id: int, new_pass: str, session: AsyncSession = Depends(get_async_session)
+# ):
+#     user = await session.get(User, user_id)
+#
+#     if user is None:
+#         raise HTTPException(status_code=404, detail="Пользователь не найден")
+#     user.hashed_password = hash_password(new_pass)
+#     await session.commit()
+#     return {"new_password_set": True}
+
+@router.get(
+    "/{user_id}/articles", response_model=UserSchema, summary="Получение пользователя и его постов"
+)
+async def get_user_with_articles(user_id: int, session: AsyncSession = Depends(get_async_session),): #  -> list[User]
+    user_and_artciles = await session.scalar(
+        select(User)
+        .where(User.id == user_id)
+        .options(
+            selectinload(User.article),
+        )
+    )
+    # data = await session.scalars(user_and_artciles)
+    # return list(data)
+
+    if not user_and_artciles:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    return user_and_artciles
