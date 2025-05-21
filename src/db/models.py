@@ -1,11 +1,10 @@
+import enum
 from datetime import datetime
-
 from sqlalchemy import (
     func,
     ForeignKey,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import enum
 
 from src.db.association_tables import (
     UserArticleAssociation,
@@ -17,6 +16,11 @@ from src.db.database import Base
 class CheckAuthor(str, enum.Enum):
     author = "author"
     not_author = "not author"
+
+
+class IsPublished(enum.Enum):
+    published = "published"
+    nonpublished = "nonpublished"
 
 
 class User(Base):
@@ -31,11 +35,6 @@ class User(Base):
         secondary="user_article_association",
         back_populates="user",
     )
-
-
-class IsPublished(enum.Enum):
-    published = "published"
-    nonpublished = "nonpublished"
 
 
 class Tag(Base):
