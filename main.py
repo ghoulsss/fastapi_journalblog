@@ -1,56 +1,33 @@
-import asyncio
-
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# from src.api_v1.crud.demo_auto_crud import demo_m2m
 from src.api_v1.routers import router as main_router
 
-# from src.db.database import drop_tables, create_tables, async_session_factory
-
-# from src.api_v1.crud.demo_auto_crud import demo_m2m
-# from src.core.config import static_files, templates
-# from src.db.database import async_session_factory
+from src.db.database import db_moves
 
 
-app = FastAPI(
-    title="Journal Blog",
-    contact={
-        "name": "Danil",
-        "url": "https://t.me/unrivaled_achilles",
-        "email": "danpavkzn@mail.ru",
-    },
-)
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
 )
 
-# app.mount("static", static_files, name="static")
+
 app.include_router(main_router)
 
 
-@app.get("/")
-async def root(request: Request):
-    # return templates.TemplateResponse(
-    #     "home.html",
-    #     {
-    #         "request": request,
-    #     },
-    # )
+@app.get("")
+async def root():
     return {"info": "journalblog"}
 
 
-async def db_moves():
-    # await drop_tables()
-    # await create_tables()
-    # async with async_session_factory() as session:
-    #     await demo_m2m(session)
-    pass
+@app.get("/db-recreate")
+async def db_recreate():
+    stmt = await db_moves()
+    return {"status": "success"}
 
 
 if __name__ == "__main__":
-    # asyncio.run(db_moves())
     uvicorn.run("main:app", host="0.0.0.0", port=4000, reload=True)
