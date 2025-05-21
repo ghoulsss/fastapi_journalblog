@@ -3,22 +3,22 @@ from pydantic import BaseModel, EmailStr
 from src.db.models import CheckAuthor
 
 
-class UserBaseSchema(BaseModel):
+class UserCreateSchema(BaseModel):
     username: str
     email: EmailStr
 
-    class Config:
-        from_attributes = True
 
-
-class UserCreateSchema(UserBaseSchema):
+class UserCreateSchema(UserCreateSchema):
     password: str
 
 
-class UserSchema(UserBaseSchema):
+class UserSchema(UserCreateSchema):
     id: int
     is_author: CheckAuthor
     # articles добавить для вывода постов пользователя мб
+
+    class Config:
+        from_attributes = True
 
 
 class UserSchemaTest(BaseModel):
