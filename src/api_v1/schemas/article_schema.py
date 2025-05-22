@@ -13,8 +13,11 @@ class ArticleCreateSchema(BaseModel):
     tag_ids: list[int] = []
 
 
-class ArticleSchema(ArticleCreateSchema):
+class ArticleSchema(BaseModel):
     id: int
+    title: str
+    content: str
+
     category: CategorySchema = None
     user: list[UserSchema] = []
     tag: list[TagSchema] = []

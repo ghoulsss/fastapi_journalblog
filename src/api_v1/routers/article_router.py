@@ -4,7 +4,7 @@ from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
 
-from src.db.models import Article, Tag
+from src.db.models import Article, Category, Tag
 from src.db.database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,32 +18,61 @@ router = APIRouter(prefix="/articles", tags=["Посты"])
 
 @router.post("", summary="Создание поста")
 async def create_article(
-    article: Annotated[ArticleCreateSchema, Depends()],
+    article_data: Annotated[ArticleCreateSchema, Depends()],
     session: AsyncSession = Depends(get_async_session),
 ):
-    article_dict = article.model_dump()
-    tag_ids = article_dict.pop("tag_ids", [])  # Извлекаем IDs тегов
+    # article_dict = article.model_dump()
+    # tag_ids = article_dict.pop("tag_ids", [])  # Извлекаем IDs тегов
 
-    # Создаем модель статьи
-    article_model = Article(**article_dict)
-    session.add(article_model)
-    await session.flush()
-    await session.refresh(Tag)
+    # # Создаем модель статьи
+    # article_model = Article(**article_dict)
+    # session.add(article_model)
+    # await session.flush()
+    # await session.refresh(Tag)
 
-    stmt = select(Tag).where(Tag.id.in_(tag_ids)).options(selectinload(Tag.article))
-    result = await session.execute(stmt)
-    tags = result.scalars().all()
+    # stmt = select(Tag).where(Tag.id.in_(tag_ids)).options(selectinload(Tag.article))
+    # result = await session.execute(stmt)
+    # tags = result.scalars().all()
 
-    found_tag_ids = {tag.id for tag in tags}
-    missing_ids = set(tag_ids) - found_tag_ids
-    if missing_ids:
-        raise HTTPException(status_code=400, detail=f"Tags not found: {missing_ids}")
+    # found_tag_ids = {tag.id for tag in tags}
+    # missing_ids = set(tag_ids) - found_tag_ids
+    # if missing_ids:
+    #     raise HTTPException(status_code=400, detail=f"Tags not found: {missing_ids}")
 
-    # Добавляем теги в статью (если lazy="selectin" — всё ок)
-    for tag in tags:
-        article_model.tag.append(tag)
+    # # Добавляем теги в статью (если lazy="selectin" — всё ок)
+    # for tag in tags:
+    #     article_model.tag.append(tag)
 
+    # await session.commit()
+    category = await session.execute(
+        select(Category).where(Category.id == article_data.category_id)
+    )
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    # Получаем теги
+    tags = []
+    if article_data.tag_ids:
+        tags = (
+            (await session.execute(select(Tag).where(Tag.id.in_(article_data.tag_ids))))
+            .scalars()
+            .all()
+        )
+
+        if len(tags) != len(article_data.tag_ids):
+            raise HTTPException(status_code=400, detail="Some tags not found")
+
+    # Создаём статью
+    article = Article(
+        title=article_data.title,
+        content=article_data.content,
+        category_id=article_data.category_id,
+        tag=tags,
+    )
+
+    session.add(article)
     await session.commit()
+    await session.refresh(article)
 
     return {"success": True, "article": article}
 
@@ -76,15 +105,15 @@ async def get_all_articles(
 async def get_article(
     article_id: int, session: AsyncSession = Depends(get_async_session)
 ):
-    article = await session.get(Article, article_id)
-    # article = await session.scalar(
-    #     select(Article)
-    #     .where(Article.id == article_id)
-    #     .options(
-    #         selectinload(Article.tag),
-    #         selectinload(Article.category),
-    #         #selectinload(Article.user),
-    #     )
+    article = await session.scalar(
+        select(Article)
+        .where(Article.id == article_id)
+        .options(
+            selectinload(Article.tag),
+            selectinload(Article.category),
+            selectinload(Article.user),
+        )
+    )
 
     if not article:
         raise HTTPException(status_code=404, detail="Пост не найден")
