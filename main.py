@@ -11,14 +11,15 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    # allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
 )
 
 
 app.include_router(main_router)
 
 
-@app.get("")
+@app.get("/")
 async def root():
     return {"info": "journalblog"}
 
