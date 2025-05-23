@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from fastapi.security import (
     HTTPBearer,
 )
-from fastapi.responses import HTMLResponse
 from src.api_v1.schemas.user_schema import UserSchemaTest
 from pydantic import BaseModel
 
-# from src.core.config import templates
 from src.demo_auth.helpers import (
     create_access_token,
     create_refresh_token,
@@ -32,16 +30,6 @@ router = APIRouter(
     tags=["JWT"],
     dependencies=[Depends(http_bearer)],
 )
-
-
-@router.get(
-    "/login",
-    response_class=HTMLResponse,
-)
-def get_login_page(
-    request: Request,
-):
-    pass  # templates.TemplateResponse("login.html", {"request": request})
 
 
 @router.post(
