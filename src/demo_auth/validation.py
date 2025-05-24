@@ -15,15 +15,11 @@ from src.demo_auth.helpers import (
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/jwt/login")
 
 
-def get_current_token_payload(  # функция для получения payload токена
-    # credentials: HTTPAuthorizationCredentials = Depends(
-    #     http_bearer
-    # ),  # Мы берем payload токена из заголовков запроса вот от сюда "credentials"
+def get_current_token_payload(
     token: str = Depends(
         oauth2_scheme
     ),  # здесь токен у нас сам автоматически по-новому обновляется
 ) -> UserSchemaTest:
-    # token = credentials.credentials
     try:
         payload = auth_utils.decode_jwt(
             token=token,
