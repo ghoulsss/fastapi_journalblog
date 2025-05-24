@@ -21,29 +21,6 @@ async def create_article(
     article_data: Annotated[ArticleCreateSchema, Depends()],
     session: AsyncSession = Depends(get_async_session),
 ):
-    # article_dict = article.model_dump()
-    # tag_ids = article_dict.pop("tag_ids", [])  # Извлекаем IDs тегов
-
-    # # Создаем модель статьи
-    # article_model = Article(**article_dict)
-    # session.add(article_model)
-    # await session.flush()
-    # await session.refresh(Tag)
-
-    # stmt = select(Tag).where(Tag.id.in_(tag_ids)).options(selectinload(Tag.article))
-    # result = await session.execute(stmt)
-    # tags = result.scalars().all()
-
-    # found_tag_ids = {tag.id for tag in tags}
-    # missing_ids = set(tag_ids) - found_tag_ids
-    # if missing_ids:
-    #     raise HTTPException(status_code=400, detail=f"Tags not found: {missing_ids}")
-
-    # # Добавляем теги в статью (если lazy="selectin" — всё ок)
-    # for tag in tags:
-    #     article_model.tag.append(tag)
-
-    # await session.commit()
     category = await session.execute(
         select(Category).where(Category.id == article_data.category_id)
     )
