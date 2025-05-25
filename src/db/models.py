@@ -30,6 +30,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[bytes]
     is_author: Mapped[CheckAuthor] = mapped_column(default=CheckAuthor.not_author)
+    active: Mapped[bool] = mapped_column(default=True)
 
     article: Mapped[list["Article"]] = relationship(
         secondary="user_article_association",

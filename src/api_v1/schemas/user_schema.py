@@ -8,21 +8,15 @@ class UserCreateSchema(BaseModel):
     email: EmailStr
 
 
-class UserCreateSchema(UserCreateSchema):
+class UserSecretSchema(UserCreateSchema):
     password: str
 
 
 class UserSchema(UserCreateSchema):
     id: int
     is_author: CheckAuthor
+    active: bool = True
     # articles добавить для вывода постов пользователя мб
 
     class Config:
         from_attributes = True
-
-
-class UserSchemaTest(BaseModel):
-    username: str
-    password: bytes
-    email: EmailStr
-    active: bool = True

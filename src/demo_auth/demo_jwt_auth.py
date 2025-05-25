@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import (
     HTTPBearer,
 )
-from src.api_v1.schemas.user_schema import UserSchemaTest
+from src.api_v1.schemas.user_schema import UserSchema
 from pydantic import BaseModel
 
 from src.demo_auth.helpers import (
@@ -37,7 +37,7 @@ router = APIRouter(
     response_model=TokenInfo,
 )
 def auth_user_issue_jwt(
-    user: UserSchemaTest = Depends(validate_auth_user),
+    user: UserSchema = Depends(validate_auth_user),
 ):
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user)
@@ -53,7 +53,7 @@ def auth_user_issue_jwt(
     response_model_exclude_none=True,
 )
 def auth_refresh_jwt(
-    user: UserSchemaTest = Depends(get_current_auth_user_for_refresh),
+    user: UserSchema = Depends(get_current_auth_user_for_refresh),
 ):
     access_token = create_access_token(user)
     return TokenInfo(
@@ -64,9 +64,9 @@ def auth_refresh_jwt(
 @router.get("/users/me")  # Проверка информации о текущем пользователе
 def auth_user_check_self_info(
     payload: dict = Depends(get_current_token_payload),
-    user: UserSchemaTest = Depends(
+    user: UserSchema = Depends(
         get_current_active_auth_user
-    ),  # проверка, что такой-то пользователь
+    ),  # проверка, что такой-то пользователь активен
 ):
     iat = payload.get("iat")
     return {
