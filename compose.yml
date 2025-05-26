@@ -2,12 +2,12 @@ services:
   db:
     image: postgres:17-alpine
     restart: always
-    # healthcheck:
-    #   test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-    #   interval: 10s
-    #   retries: 5
-    #   start_period: 30s
-    #   timeout: 10s
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
     container_name: psgr
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -51,6 +51,24 @@ services:
       - .:/app
     depends_on:
       - db
+      - redis
+    networks:
+      - dbnet
+  
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    command: redis-server --protected-mode no
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    # healthcheck:
+    #   test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} --no-auth-warning ping | grep -q PONG"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    restart: unless-stopped
     networks:
       - dbnet
 
@@ -60,3 +78,4 @@ networks:
 
 volumes:
   postgres-data:
+  redisdata:

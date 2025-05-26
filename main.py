@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api_v1.routers import router as main_router
-
+from tests.redis import router as test_router
 from src.db.database import db_moves
 
 
@@ -17,6 +17,7 @@ app.add_middleware(
 
 
 app.include_router(main_router)
+app.include_router(test_router)
 
 
 @app.get("/")
