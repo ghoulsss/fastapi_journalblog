@@ -1,22 +1,17 @@
 from fastapi import APIRouter, Depends
-from fastapi.security import (
-    HTTPBearer,
-)
-from src.api_v1.schemas.user_schema import UserSchema
 from pydantic import BaseModel
 
+from src.api_v1.schemas.user_schema import UserSchema
 from src.demo_auth.helpers import (
     create_access_token,
     create_refresh_token,
 )
 from src.demo_auth.validation import (
-    get_current_token_payload,
-    get_current_auth_user_for_refresh,
     get_current_active_auth_user,
+    get_current_auth_user_for_refresh,
+    get_current_token_payload,
     validate_auth_user,
 )
-
-http_bearer = HTTPBearer(auto_error=False)
 
 
 class TokenInfo(BaseModel):
@@ -28,7 +23,6 @@ class TokenInfo(BaseModel):
 router = APIRouter(
     prefix="/jwt",
     tags=["JWT"],
-    dependencies=[Depends(http_bearer)],
 )
 
 
@@ -61,12 +55,10 @@ def auth_refresh_jwt(
     )
 
 
-@router.get("/users/me")  # Проверка информации о текущем пользователе
+@router.get("/users/me")
 def auth_user_check_self_info(
     payload: dict = Depends(get_current_token_payload),
-    user: UserSchema = Depends(
-        get_current_active_auth_user
-    ),  # проверка, что такой-то пользователь активен
+    user: UserSchema = Depends(get_current_active_auth_user),
 ):
     iat = payload.get("iat")
     return {

@@ -1,80 +1,67 @@
 services:
   db:
     image: postgres:17-alpine
-    restart: always
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
-    container_name: psgr
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      retries: 10
+      timeout: 5s
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-    networks:
-      - dbnet
-  
+
   adminer:
-    image: adminer
-    container_name: adminer
-    restart: always
+    image: adminer:4
+    profiles: ["tools"]
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "127.0.0.1:8080:8080"
-    networks:
-      - dbnet
 
   backend-fastapi:
     build: .
-    image: backend-fastapi
-    container_name: backend-fastapi
-    restart: always
-    env_file:
-      - .env
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    restart: unless-stopped
+    env_file: .env
     environment:
-      - POSTGRES_SERVER=db
-      - POSTGRES_PORT=${POSTGRES_PORT?Variable not set}
-      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-    command: "uvicorn main:app --host 0.0.0.0 --port 4000 --reload" # --workers 4
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+      AUTH_JWT__PRIVATE_KEY_PATH: /app/certs/jwt-private.pem
+      AUTH_JWT__PUBLIC_KEY_PATH: /app/certs/jwt-public.pem
+    command: ["sh", "-c", "alembic upgrade head && exec uvicorn main:app --host 0.0.0.0 --port 4000"]
     ports:
       - "127.0.0.1:8000:4000"
     volumes:
-      - .:/app
+      - ./certs:/app/certs:ro
     depends_on:
-      - db
-      - redis
-    networks:
-      - dbnet
-  
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/db', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   redis:
     image: redis:7.2-alpine
-    container_name: redis
-    command: redis-server --protected-mode no
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     volumes:
       - redisdata:/data
-    # healthcheck:
-    #   test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} --no-auth-warning ping | grep -q PONG"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
-    restart: unless-stopped
-    networks:
-      - dbnet
-
-networks:
-  dbnet:
-    driver: bridge
 
 volumes:
   postgres-data:

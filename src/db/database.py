@@ -1,5 +1,6 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column
 
 from config import settings
 
@@ -14,31 +15,18 @@ class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
 
 
-async_engine = create_async_engine(
-    url=settings.DATABASE_URL_asyncpg,  # echo=True
-)  # POSTGRESQL
-async_session_factory = async_sessionmaker(
-    async_engine, expire_on_commit=False
-)  # POSTGRESQL
+async_engine = create_async_engine(settings.DATABASE_URL_asyncpg, pool_pre_ping=True)
+async_session_factory = async_sessionmaker(async_engine, expire_on_commit=False)
 
-# DATABASE_URL = f"sqlite+aiosqlite:///{BASE_DIR}/test.db"  # для sqlite
+if async_engine.dialect.name == "sqlite":
 
-
-async def create_tables():
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def drop_tables():
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    @event.listens_for(async_engine.sync_engine, "connect")
+    def enable_foreign_keys(connection, _):
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 async def get_async_session():
     async with async_session_factory() as session:
         yield session
-
-
-async def db_moves():
-    await drop_tables()
-    await create_tables()

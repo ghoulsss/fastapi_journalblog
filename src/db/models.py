@@ -1,15 +1,13 @@
 import enum
 from datetime import datetime
+
 from sqlalchemy import (
-    func,
     ForeignKey,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.db.association_tables import (
-    UserArticleAssociation,
-    ArticleTagAssociation,
-)
+from src.db.association_tables import ArticleTagAssociation, UserArticleAssociation
 from src.db.database import Base
 
 
@@ -24,7 +22,7 @@ class IsPublished(enum.Enum):
 
 
 class User(Base):
-    # __table_args__ = {"extend_existing": True}  # можно удалить при алембике вроде
+    __table_args__ = {"sqlite_autoincrement": True}
 
     username: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
@@ -33,7 +31,7 @@ class User(Base):
     active: Mapped[bool] = mapped_column(default=True)
 
     article: Mapped[list["Article"]] = relationship(
-        secondary="user_article_association",
+        secondary=UserArticleAssociation.__table__,
         back_populates="user",
     )
 
@@ -42,7 +40,7 @@ class Tag(Base):
     name: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
 
     article: Mapped[list["Article"]] = relationship(
-        secondary="article_tag_association",
+        secondary=ArticleTagAssociation.__table__,
         back_populates="tag",
     )
 
@@ -54,17 +52,15 @@ class Category(Base):
 
 
 class Article(Base):
-    # __table_args__ = {"extend_existing": True}  # можно удалить при алембике вроде
-
     title: Mapped[str] = mapped_column(index=True, nullable=False)
     content: Mapped[str] = mapped_column(nullable=False)
     is_published: Mapped[IsPublished] = mapped_column(default=IsPublished.nonpublished)
     created_at: Mapped[datetime] = mapped_column(
-        server_default=func.now(), default=datetime.now()
+        server_default=func.now(), default=datetime.now
     )
 
     user: Mapped[list["User"]] = relationship(
-        secondary="user_article_association",
+        secondary=UserArticleAssociation.__table__,
         back_populates="article",
     )
 
@@ -74,6 +70,6 @@ class Article(Base):
     category: Mapped["Category"] = relationship(back_populates="article")
 
     tag: Mapped[list["Tag"]] = relationship(
-        secondary="article_tag_association",
+        secondary=ArticleTagAssociation.__table__,
         back_populates="article",
     )

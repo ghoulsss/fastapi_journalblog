@@ -6,7 +6,7 @@ from src.db.database import Base
 
 class UserArticleAssociation(Base):
     __tablename__ = "user_article_association"
-    table_name = (
+    __table_args__ = (
         UniqueConstraint(
             "user_id",
             "article_id",
@@ -20,7 +20,7 @@ class UserArticleAssociation(Base):
 
 class ArticleTagAssociation(Base):
     __tablename__ = "article_tag_association"
-    table_name = (
+    __table_args__ = (
         UniqueConstraint("article_id", "tag_id", name="idx_unique_article_tag"),
     )
 

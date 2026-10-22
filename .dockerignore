@@ -20,3 +20,15 @@ scripts
 postman
 ./postgres-data
 .venv
+.venv-check
+.cache
+.tools
+certs
+*.pem
+*.key
+*.db
+*.db-shm
+*.db-wal
+.pytest_cache
+.ruff_cache
+htmlcov

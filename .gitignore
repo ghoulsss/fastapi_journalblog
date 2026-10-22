@@ -4,3 +4,13 @@ venv
 certs
 .env
 .venv
+.venv-check/
+.cache/
+.tools/
+.pytest_cache/
+.ruff_cache/
+*.db
+*.db-shm
+*.db-wal
+.coverage
+htmlcov/

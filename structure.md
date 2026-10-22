@@ -1,33 +1,28 @@
-app/
-├── .dockerignore
-├── .env.example
-├── .gitignore
+# Структура проекта
+
+```text
+fastapi_journalblog/
+├── main.py                       # FastAPI, lifespan, CORS, подключение маршрутов
+├── config.py                     # Настройки из окружения и .env
+├── pyproject.toml                # Зависимости и инструменты разработки
+├── uv.lock                       # Lock-файл uv и Docker
 ├── Dockerfile
-├── README.md
+├── compose.yml                   # API, PostgreSQL, Redis, необязательный Adminer
 ├── alembic.ini
-├── compose.yml
-├── pyproject.toml
-├── poetry.lock
-├── requirements.txt
-├── src/                      # Основной код приложения
-│   ├── main.py               # Точка входа (может быть переименована в app.py)
-│   ├── config.py             # Конфигурация приложения
-│   ├── api/                  # API endpoints
-│   │   ├── v1/               # Версия API
-│   │   │   ├── init.py
-│   │   │   ├── endpoints/    # Разделение эндпоинтов по модулям
-│   │   │   │   ├── auth.py
-│   │   │   │   ├── demo_auth.py
-│   │   │   │   └── ...
-│   │   │   └── routers.py    # Или здесь можно объединить все роутеры
-│   ├── core/                 # Ядро приложения
-│   │   ├── security.py       # Аутентификация, JWT и т.д.
-│   │   └── config.py         # Может заменить config.py на верхнем уровне
-│   ├── db/                   # Работа с базой данных
-│   │   ├── models.py         # ORM модели
-│   │   ├── repositories.py   # Паттерн репозиторий (опционально)
-│   │   └── session.py        # Сессии БД
-│   ├── migrations/           # Миграции Alembic
-│   └── schemas/              # Pydantic схемы
-├── nginx/                    # Конфигурация nginx
-└── tests/                    # Тесты (можно добавить позже)
+├── .env.example
+├── scripts/generate_jwt_keys.py   # Генерация локальных ключей RS256
+├── certs/                        # Локальные ключи, исключены из Git и образа
+├── src/
+│   ├── api_v1/
+│   │   ├── routers/              # Пользователи, статьи, категории, теги, health
+│   │   └── schemas/              # Pydantic-схемы запросов и ответов
+│   ├── auth/utils.py             # Подпись/проверка JWT и bcrypt
+│   ├── demo_auth/                # Маршруты JWT, проверка пользователя, токены
+│   ├── db/                       # ORM-модели, связи, сессии и транзакции
+│   └── migrations/               # Alembic и последовательные ревизии
+├── tests/                        # API и миграции на изолированной SQLite
+└── nginx/nginx.conf              # Пример reverse proxy вне Compose
+```
+
+Папки `.venv*`, `.tools` и `.cache` — локальные окружения и результаты проверок;
+они не входят в Git или Docker-образ.
