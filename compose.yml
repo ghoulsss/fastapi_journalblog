@@ -43,8 +43,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/db', timeout=3)"]
       interval: 30s
@@ -54,6 +52,7 @@ services:
 
   redis:
     image: redis:7.2-alpine
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]

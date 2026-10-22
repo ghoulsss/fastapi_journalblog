@@ -19,10 +19,11 @@ dependencies = [
     "sqlalchemy>=2.0.36,<2.1",
     "uvicorn>=0.34,<1",
     "redis>=6.1,<7",
+    "prometheus-client>=0.21,<1",
 ]
 
 [dependency-groups]
-dev = ["httpx>=0.28,<1", "pytest>=8.3,<10", "pytest-asyncio>=1,<2", "ruff>=0.11,<1"]
+dev = ["httpx>=0.28,<1", "pytest>=8.3,<10", "pytest-asyncio>=1,<2", "ruff>=0.11,<1", "fakeredis[lua]>=2.28,<3"]
 
 [tool.uv]
 package = false

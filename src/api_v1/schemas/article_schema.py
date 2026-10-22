@@ -35,16 +35,26 @@ class ArticleUpdateSchema(BaseModel):
         return self
 
 
-class ArticleSchema(BaseModel):
+class ArticleContentSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     title: str
     content: str
     category: CategorySchema
-    user: list[UserSchema]
     tag: list[TagSchema]
     is_published: IsPublished
     created_at: datetime
+
+
+class ArticleSchema(ArticleContentSchema):
+    user: list[UserSchema]
+
+
+class CachedArticleSchema(ArticleContentSchema):
+    """Cache only article content and author IDs, never account attributes."""
+
+    model_config = ConfigDict(extra="forbid")
+    author_ids: list[int]
 
 
 class UserWithArticlesSchema(UserSchema):

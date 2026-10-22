@@ -60,3 +60,30 @@ def test_legacy_data_is_not_silently_discarded(tmp_path):
             connection.execute("SELECT version_num FROM alembic_version").fetchone()[0]
             == "fd642891166b"
         )
+
+
+def test_cache_migration_preserves_current_data(tmp_path):
+    database = tmp_path / "existing.db"
+    migrate(database, "upgrade", "c84e91a03f2b")
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "INSERT INTO categorys (id, name) VALUES (1, 'Keep current data')"
+        )
+    migrate(database, "upgrade", "head")
+    migrate(database, "check")
+    with sqlite3.connect(database) as connection:
+        assert (
+            connection.execute("SELECT name FROM categorys").fetchone()[0]
+            == "Keep current data"
+        )
+        rows = connection.execute(
+            "SELECT id, generation FROM cache_generations"
+        ).fetchall()
+        assert {row[0] for row in rows} == {"articles", "categories", "tags"}
+        assert all(len(row[1]) == 32 for row in rows)
+    migrate(database, "downgrade", "c84e91a03f2b")
+    with sqlite3.connect(database) as connection:
+        assert (
+            connection.execute("SELECT name FROM categorys").fetchone()[0]
+            == "Keep current data"
+        )

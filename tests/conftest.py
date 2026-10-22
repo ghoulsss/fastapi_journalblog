@@ -1,19 +1,25 @@
 import os
 from pathlib import Path
-from unittest.mock import AsyncMock
 
 # Configure the application before its first import. No developer database is used.
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["REDIS_URL"] = "redis://localhost:1/0"
 
+from uuid import uuid4
+
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from fakeredis.aioredis import FakeRedis
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import insert
 
 from config import settings
 from main import app
+from src.cache.generations import SCOPES
+from src.cache.service import ResponseCache
 from src.db.database import Base, async_engine
+from src.db.models import CacheGeneration
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -46,14 +52,19 @@ def jwt_keys(tmp_path_factory):
 async def client():
     async with async_engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
+        await connection.execute(
+            insert(CacheGeneration),
+            [{"id": scope, "generation": uuid4().hex} for scope in SCOPES],
+        )
     async with app.router.lifespan_context(app):
         original_redis = app.state.redis
-        app.state.redis = AsyncMock()
-        app.state.redis.ping.return_value = True
+        app.state.redis = FakeRedis(decode_responses=True)
+        app.state.cache = ResponseCache(app.state.redis, settings.cache)
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             yield client
+        await app.state.redis.aclose()
         app.state.redis = original_redis
         async with async_engine.begin() as connection:
             await connection.run_sync(Base.metadata.drop_all)

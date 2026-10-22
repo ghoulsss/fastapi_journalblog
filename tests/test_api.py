@@ -304,7 +304,9 @@ async def test_removing_tag_from_existing_article(client, auth):
 async def test_health_checks(client):
     assert (await client.get("/health/db")).status_code == 200
     assert (await client.get("/health/redis")).status_code == 200
-    app.state.redis.ping.side_effect = ConnectionError("sensitive internal details")
+    app.state.redis.ping = AsyncMock(
+        side_effect=ConnectionError("sensitive internal details")
+    )
     response = await client.get("/health/redis")
     assert response.status_code == 503
     assert "sensitive" not in response.text
